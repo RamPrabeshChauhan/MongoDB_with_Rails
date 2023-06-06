@@ -6,9 +6,16 @@ class Api::V1::UsersController < ApplicationController
     def getUsers
         user = User.all
         if user
-            render json: user, status: :ok
+            formatted_users = user.map do |userValue|
+                {
+                    id: userValue["_id"].to_s,
+                    username: userValue["username"].strip, 
+                    email: userValue["email"],
+                }
+            end
+            render json: formatted_users, status: :ok
         else
-            render json: {message: "User Empty"}, status: :unprocessable_entity
+            render json: {message: "No user found."}, status: :unprocessable_entity
         end
 
     end
@@ -18,17 +25,22 @@ class Api::V1::UsersController < ApplicationController
         user = User.new(username: params[:username], email: params[:email], password: params[:password])
 
         if user.save()
-            render json: user, status: :ok
+            render json: user.successful_response, status: :ok
         else
             render json: {message: "User not added", error: user.errors }, status: :unprocessable_entity
         end
-        
+         
     end 
 
     # ─── Show ───────────────────────────────────────────────────────────────────────
     def showUser
-        if @user
-                render json: @user, status: :ok
+        if @user  
+            formatted_users = {
+                id: @user["_id"].to_s,
+                username: @user["username"].strip,
+                email: @user["email"],
+              }
+            render json: formatted_users, status: :ok
         else
             render json: {message: "User not found.."}, status: :unprocessable_entity
         end
@@ -38,9 +50,9 @@ class Api::V1::UsersController < ApplicationController
     def updateUser
         if @user
             if @user.update(username: params[:username], email: params[:email], password: params[:password])
-                render json: @user, status: :ok
+                render json: @user.successful_response, status: :ok
             else
-                render json: {message: "User failed", error: @user.errors }, status: :unprocessable_entity
+                render json: {message: "Failed to update user.", error: @user.errors }, status: :unprocessable_entity
             end
         else
             render json: {message: "User not found.."}, status: :unprocessable_entity
@@ -52,13 +64,12 @@ class Api::V1::UsersController < ApplicationController
     def deleteUser
         if @user
             if @user.destroy(username: params[:username], email: params[:email], password: params[:password])
-                render json: {message: "User deleted"}, status: :ok
+                render json: {message: "User deleted successfully!"}, status: :ok
             else
-                render json: {message: "User failed"}, status: :unprocessable_entity
+                render json: {message: "Failed to delete user."}, status: :unprocessable_entity
             end
         else
-            render json: {message: "User not found..", }, status: :unprocessable_entity
-            # render json: @user, status: :unprocessable_entity
+            render json: {message: "User not found...", }, status: :unprocessable_entity
         end
     end
     

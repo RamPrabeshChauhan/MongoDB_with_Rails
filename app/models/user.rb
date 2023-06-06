@@ -8,11 +8,19 @@ class User
   field :password_digest, type: String
 
   # for validation
-  validates :username, uniqueness: true, presence: true
-  validates :email, uniqueness: true, presence: true
+  validates :username, uniqueness: { message: "Username has already been taken." }, presence: true
+  validates :email, uniqueness: { message: "Email has already been taken." }, presence: true
   validates :password, presence: true, :length => {:minimum => 9}, :on => :create
 
-  has_secure_password # encryption
+  # encryption
+  has_secure_password 
+
+  def successful_response
+    {
+      id: id.to_s,
+      username: username,
+      email: email,
+    }
+  end
 
 end
-  
